@@ -4,7 +4,9 @@
 #include <iterator>
 #include <sstream>
 #include <algorithm>
-#include <cassert>
+#include <numeric>
+#include <cstdint>
+
 #include "common.hpp"
 
 
@@ -51,11 +53,10 @@ int main(int , char** ) {
     }
     auto i = std::find_if(nodes.begin(), nodes.end(), [](const std::pair<std::string, Node*>& p){ return p.second->parent == nullptr;});
     std::cout << "Root: " << i->first << std::endl;
-    assert(i->first == "ahnofa");
-
-    auto root = i->second;
-
+    //ahnofa
+ 
     //part 2
+    auto root = i->second;
     auto find_mode = [](const std::vector<Node*>& nodes) -> std::pair<unsigned, Node*>{
         if(nodes.empty()) {
             return std::make_pair(0LL, nullptr);
@@ -96,5 +97,6 @@ int main(int , char** ) {
     }
     auto w = (mode - node->calc_weight()) + node->weight;
     std::cout << "Offending : " << node->name << ", diff: " << w << std::endl;
+    //ltleg, diff: 802
 
 }

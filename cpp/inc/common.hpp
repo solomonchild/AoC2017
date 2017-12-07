@@ -17,9 +17,11 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
     return res;
 }
 
+#ifdef __MINGW32__
 inline unsigned stoi(const std::string& str) {
     std::stringstream ss(str);
     unsigned i = 0;
     ss >> i;
     return i;
 }
+#endif

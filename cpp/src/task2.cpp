@@ -5,6 +5,7 @@
 #include <numeric>
 #include <sstream>
 #include <iterator>
+#include <cstdint>
 
 using Ints = std::vector<int>;
 
