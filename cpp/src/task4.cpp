@@ -8,14 +8,10 @@
 inline bool is_there_anagram(const std::set<std::string>& set, const std::string& str) {
     std::string s = str;
     std::sort(s.begin(), s.end());
-    do {
-        if(set.count(s) != 0)
-            return true;
-    } while(std::next_permutation(s.begin(), s.end()));
-    return false;
+    return set.count(s) != 0;
 }
 
-int main(int argc, char** argv) {
+int main(int, char**) {
     std::string input;
     std::size_t valid = 0;
     while(std::getline(std::cin, input)) {
@@ -25,14 +21,17 @@ int main(int argc, char** argv) {
         std::istream_iterator<std::string> end;
         valid++;
         while(it != end) {
-            if(is_there_anagram(set, *it)) {
+            auto str = *it;
+            std::sort(str.begin(), str.end());
+            if(is_there_anagram(set, str)) {
                 valid--;
                 break;
             }
-            set.insert(*it);
+            set.insert(str);
             it++;
         }
     }
     std::cout << valid << std::endl;
+    //223
 }
 
