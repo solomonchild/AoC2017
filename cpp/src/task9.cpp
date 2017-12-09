@@ -21,11 +21,11 @@ int main() {
                 if(c == '{') {
                     level++;
                 }		
-                if(c == '}') {
+                else if(c == '}') {
                     ret = std::make_pair(tuple.first + level, tuple.second);
                     level--;
                 }
-                if(c == '<') {
+                else if(c == '<') {
                     state = State::Comment;
                 }
             } break;
