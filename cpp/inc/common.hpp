@@ -9,7 +9,7 @@ inline std::vector<std::string> split(const std::string& str, const std::string&
     while(end != std::string::npos) {
         end = str.find_first_of(delim, start);
         auto sub = str.substr(start, end - start);
-        if(std::find(skip.begin(), skip.end(), sub) == skip.end()) {
+        if(sub != "" && std::find(skip.begin(), skip.end(), sub) == skip.end()) {
             if(*sub.begin() == ',') sub.erase(sub.begin());
             if(*sub.rbegin() == ',') sub.erase((sub.rbegin() + 1).base());
             res.push_back(sub);
