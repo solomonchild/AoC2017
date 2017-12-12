@@ -35,5 +35,7 @@ int main(int, char**) {
         max = std::max(distance(start), max);
     }
     std::cout << distance(start) << std::endl;
+    //685
     std::cout << max << std::endl;
+    //1457
 }
