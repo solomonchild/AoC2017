@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <algorithm> //transform
 #include <numeric> //iota
+#include <iterator> //distance
+#include <functional> //bit_xor
 
 #include "common.hpp"
 const bool test = false;
@@ -84,9 +86,8 @@ int main(int, char**) {
     
     size_t current = 0;
     size_t skip = 0;
-    int times = 1;
-    if(part2) 
-        times = 64;
+    int times = part2 ? 64 : 1;
+
     while(times --) {
         for(auto len : lengths) {
             size_t to = (current + (!len ? 1:len) - 1) % numbers.size();
@@ -95,21 +96,17 @@ int main(int, char**) {
             current %= numbers.size();
         }
     }
-    if(!part2)
+    if(!part2) {
         std::cout << numbers[0] * numbers[1] << std::endl; //52070
-    
-    if(part2) {
+    } else { 
         std::array<int, 16> hash = {};
-        for(int i = 0; i < 16; i ++) {
-            std::for_each(numbers.begin() + i*16, numbers.begin() + i*16 + 16, [&hash, i](int el) mutable {
-                    hash[i] ^= el;
-            });
+        for(auto it = std::begin(numbers); it != std::end(numbers); std::advance(it, 16)) {
+            hash[std::distance(std::begin(numbers), it)/16] = std::accumulate(it, std::next(it, 16), 0, std::bit_xor<void>());
         }
-
-        std::cout << std::hex  ;
+        
+        std::cout.flags(std::ios::hex);
         for(int i : hash) {
             std::cout << std::setw(2) << std::setfill('0') << i;
-
         }
         std::cout << std::endl;
         //7f94112db4e32e19cf6502073c66f9bb
