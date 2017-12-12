@@ -101,7 +101,7 @@ int main(int, char**) {
     } else { 
         std::array<int, 16> hash = {};
         for(auto it = std::begin(numbers); it != std::end(numbers); std::advance(it, 16)) {
-            hash[std::distance(std::begin(numbers), it)/16] = std::accumulate(it, std::next(it, 16), 0, std::bit_xor<void>());
+            hash[std::distance(std::begin(numbers), it)/16] = std::accumulate(it, std::next(it, 16), 0, std::bit_xor<>());
         }
         
         std::cout.flags(std::ios::hex);
