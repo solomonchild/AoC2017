@@ -25,62 +25,25 @@ int main(int, char**) {
     }
 
     using Scanner = std::vector<std::pair<int, bool>>;
-    auto print = [] (Scanner scanner, int pos = -1) {
-        for(auto s = 0; s < static_cast<int>(scanner.size()); s++) {
-            if(s == pos)
-                std::cout << "(";
-            std::cout << scanner[s].first;
-            if(s == pos)
-                std::cout << ")";
-            std::cout << " ";
-        }
-        std::cout << std::endl;
-    };
     Scanner scanner(layers.size(), std::pair<int, bool>(0, false));
 
-    auto move = [&layers, &print] (Scanner scanner, int how_much = 1) {
-        while(how_much--) {
-            for(size_t i = 0; i < scanner.size(); i++) { 
-                if(layers[i] > 1) {
-                    if(!scanner[i].second)
-                    {
-                        scanner[i].first++;
-                        if(scanner[i].first == layers[i] - 1)
-                            scanner[i].second = true;
-                    } else {
-                        scanner[i].first--;
-                        if(scanner[i].first == 0)
-                            scanner[i].second = false;
-                    }
-                }
-            }
-        }
-        return scanner;
-    };
-
-    auto severity = [&layers, &move, &print] (Scanner scanner) {
-        size_t severity = 0; 
+    auto severity = [&layers] (int time_offset = 0) {
+        (void) time_offset;
         bool caught = false;
-        for(size_t pos = 0; pos < layers.size(); pos++) {
-            if(scanner[pos].first == 0 && layers[pos] != 0) {
+        int sev = 0;
+        for(size_t i = 0u; i < layers.size(); i++) {
+            if(!i || i%((layers[i] * 2 - 2)) == 0) {
+                sev += i * layers[i];
                 caught = true;
-                severity += pos * layers[pos];
             }
-            scanner = move(scanner);
         }
-        return std::make_pair(severity, caught);
+
+        if(sev == 0 && caught) {
+            return -1;
+        }
+        else return sev;
     };
-    auto sev = severity(move(scanner, 0));
-    std::cout << "Part1: " << sev.first << std::endl;
+    auto sev = severity();
+    std::cout << "Part1: " << sev << std::endl;
     //748
-
-
-    for(int ps = 0; ps < std::numeric_limits<int>::max(); ps++){
-        if(!severity(move(scanner, ps)).second){ 
-            std::cout << ps << " delay" << std::endl;
-            break;
-        }
-    }
-
-
 }
