@@ -10,6 +10,26 @@
 #include <iterator>
 
 using Array = std::array<int, 256>;
+using Rows = std::array<std::array<int, 128>, 128>;
+
+auto dfs(Rows& rows, int row, int col, int group) {
+    if(rows[row][col] != -1) {
+        return;
+    }
+    rows[row][col] = group;
+    if(row != 0 && rows[row-1][col] == -1) {
+        dfs(rows, row-1, col, group);
+    }
+    if(row != 127 && rows[row+1][col] == -1) {
+        dfs(rows, row+1, col, group);
+    }
+    if(col != 0 && rows[row][col-1] == -1) {
+        dfs(rows, row, col-1, group);
+    }
+    if(col != 127 && rows[row][col+1] == -1) {
+        dfs(rows, row, col+1, group);
+    }
+}
 
 auto get_hash(std::string input) {
     Array array;
@@ -49,7 +69,6 @@ size_t part1(const std::string& row_ascii) {
             return count + c;
     });
 }
-using Rows = std::array<std::array<int, 128>, 128>;
 auto part2(const std::string& hash, Rows& rows, size_t rownum) {
 
     std::array<int, 128> row{};
@@ -67,6 +86,13 @@ auto part2(const std::string& hash, Rows& rows, size_t rownum) {
     rows[rownum] = row;
     auto max_group = 0;
     if(rownum == 127) {
+        for(size_t row = 0; row < 128; row++) {
+            for(size_t col = 0; col < 128; col++) {
+                if(rows[row][col] == -1) {
+                    dfs(rows, row, col, ++max_group);
+                }
+            }
+        }
         std::cout << max_group << std::endl;
     }
 }
