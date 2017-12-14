@@ -65,30 +65,9 @@ auto part2(const std::string& hash, Rows& rows, size_t rownum) {
         }
     }
     rows[rownum] = row;
-    const static auto invalid = std::numeric_limits<int>::min();
+    auto max_group = 0;
     if(rownum == 127) {
-        auto get_left = [&rows](int row, int col){ if(col != 0) return rows[row][col-1]; else return invalid; };
-        auto set_left = [&rows](int row, int col, int val){ rows[row][col-1] = val;};
-        auto get_right = [&rows](int row, int col){ if(col != 127) return rows[row][col+1]; else return invalid; };
-        auto set_right = [&rows](int row, int col, int val){ rows[row][col+1] = val; };
-        auto get_up = [&rows](int row, int col){ if(row != 0) return rows[row-1][col]; else return invalid; };
-        auto set_up = [&rows](int row, int col, int val){ rows[row-1][col] = val; };
-        auto get_down = [&rows](int row, int col){ if(row != 127) return rows[row+1][col]; else return invalid; };
-        auto set_down = [&rows](int row, int col, int val){ rows[row+1][col] = val; };
-    
-    auto max_group = 1;
-    for(size_t row = 0; row < 127; row++) {
-        for(size_t col = 0; col < 127; col++) {
-            if(rows[row][col] == invalid)
-                continue;
-            if(get_left(row, col) == -1) set_left(row, col, max_group); else rows[row][col] = get_left(row,col);
-            if(get_right(row, col) == -1) set_right(row, col, max_group); else rows[row][col] = get_right(row,col);
-            if(get_down(row, col) == -1) set_down(row, col, max_group); else rows[row][col] = get_down(row,col);
-            if(get_up(row, col) == -1) set_up(row, col, max_group); else rows[row][col] = get_up(row,col);
-            if(rows[row][col] == -1) rows[row][col] = max_group++;
-        }
-    }
-    std::cout << max_group << std::endl;
+        std::cout << max_group << std::endl;
     }
 }
 
