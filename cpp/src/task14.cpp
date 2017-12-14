@@ -40,37 +40,59 @@ auto get_hash(std::string input) {
     return oss.str();
 }
 
+size_t part1(const std::string& row_ascii) {
+    return std::accumulate(row_ascii.begin(), row_ascii.end(), 0U, [](size_t count, std::uint8_t chr){
+            size_t c = 0;
+            std::string str(1, chr);
+            chr = std::stoi(str, 0, 16);
+            for(size_t i = 0; i < 4; i++)  if((chr >> i) & 0x1) c++; 
+            return count + c;
+    });
+}
+auto part2(const std::string& hash) {
+
+    using Rows = std::array<std::array<int, 128>, 128>;
+    Rows rows;
+    std::array<int, 128> row{};
+    for(size_t i = 0; i < hash.size(); i++) {
+        std::string tmp(1, hash[i]);
+        auto chr = std::stoi(tmp, 0, 16);
+        std::cout << chr << std::endl;
+
+        for(size_t idx = 0; idx < 4; idx++) {
+            bool set = ((chr >> (3-idx)) & 0x1);
+            if(set) {
+                row[i*4 + idx] = -1;
+            }
+        }
+    }
+    //rows[rownum] = row;
+    auto get_left = [&rows](int row, int col){
+        if(col != 0) 
+            return rows[row][col-1];
+    };
+    auto get_right = [&rows](int row, int col){
+        if(col != 127) 
+            return rows[row][col+1];
+    };
+    auto get_up = [&rows](int row, int col){
+        if(row != 0) 
+            return rows[row-1][col];
+    };
+    auto get_down = [&rows](int row, int col){
+        if(row != 127) 
+            return rows[row+1][col];
+    };
+
+}
+
 int main(int, char**){
     std::string hash; 
     std::getline(std::cin, hash);
     size_t count = 0;
-    using Rows = std::array<std::array<int, 128>, 128>;
-    Rows rows;
-    std::array<int, 128> row{};
     for(size_t rownum = 0; rownum < 128; rownum++) {
         auto row_ascii = get_hash(hash + "-" + std::to_string(rownum));
-        count += std::accumulate(row_ascii.begin(), row_ascii.end(), 0U, [](size_t count, std::uint8_t chr){
-                size_t c = 0;
-                std::string str(1, chr);
-                chr = std::stoi(str, 0, 16);
-                for(size_t i = 0; i < 4; i++)  if((chr >> i) & 0x1) c++; 
-                return count + c;
-        });
-
-        for(size_t i = 0; i < row_ascii.size(); i++) {
-            std::string tmp(1, row_ascii[i]);
-            auto chr = std::stoi(tmp, 0, 16);
-            std::cout << chr << std::endl;
-
-            for(size_t idx = 0; idx < 4; idx++) {
-                bool set = ((chr >> (3-idx)) & 0x1);
-                if(set) {
-                    row[i*4 + idx] = -1;
-                }
-            }
-        }
-        rows[rownum] = row;
+        count += part1(row_ascii);
     }
-    std::cout << *std::max_element(row.begin(), row.end()) << std::endl;
     std::cout << count << std::endl;
 }
