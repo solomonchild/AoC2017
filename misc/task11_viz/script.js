@@ -8231,8 +8231,8 @@ var x = d3.scaleLinear()
 var y = d3.scaleLinear()
     .domain([-600, 600])
     .range([0, 100]);
-w = 800;
-h = 800;
+w = 1800;
+h = 1800;
 svg.selectAll("circle")
     .data(dataset)
     .enter()
