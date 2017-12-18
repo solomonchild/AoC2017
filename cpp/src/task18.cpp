@@ -245,4 +245,6 @@ int main(int, char**) {
         part1(cmds);
     else 
         part2(cmds);
+    //1187
+    //5969
 }
