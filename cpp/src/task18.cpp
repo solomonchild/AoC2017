@@ -14,12 +14,6 @@
 
 #include "common.hpp"
 
-std::mutex outm;
-void print(std::ostringstream& ss) {
-    std::cout << ss.str() << std::endl;
-
-}
-
 enum class CommandType {
     Sound,
     Set,
@@ -95,7 +89,6 @@ struct Program {
     void wait() { w.join(); }
     void start() { started = true; }
 
-    ~Program() { std::cout << "Dctor" << std::endl;}
     Program(const Commands& commands, int i) 
         :     other(nullptr) 
              ,cmds(commands)
@@ -115,7 +108,6 @@ struct Program {
                     };
 
                     for(size_t i = 0; i < cmds.size() && started; i++) {
-                        print_reg();
                         const auto& p = cmds[i];
                         auto type = p.first;
                         const auto& args = p.second;
@@ -164,11 +156,6 @@ struct Program {
 
     void send(int64_t val) {
         std::lock_guard<std::mutex> guard{q_lock};
-        std::unique_lock<std::mutex> p_guard{outm};
-        std::ostringstream ss;
-        ss << std::this_thread::get_id() << " send hit " <<  id << std::endl;  
-        print(ss);
-        p_guard.unlock();
         values.push_back(val);
         cv.notify_one();
     }
@@ -179,17 +166,11 @@ struct Program {
         for(auto p : registers) {
             ss << p.first << ": " << p.second << ", ";
         }
-        print(ss);
-        std::cout << std::endl;
+        std::cout << ss.str() << std::endl;
     }
 
     int64_t recv() {
         std::unique_lock<std::mutex> lk(m);
-        std::unique_lock<std::mutex> p_guard{outm};
-        std::ostringstream ss;
-        ss << std::this_thread::get_id() << " recv hit " <<  id << std::endl;
-        print(ss);
-        p_guard.unlock();
         cv.wait_for(lk, std::chrono::milliseconds(100), [this]{ return !values.empty();});
         if(!values.empty()) {
             std::lock_guard<std::mutex> guard{q_lock};
@@ -232,6 +213,86 @@ void part2(const Commands& cmds) {
     std::cout << "Id: " << p1.id << " s:" << p1.sent <<  " r:" << p1.rec << std::endl;
     std::cout << "Id: " << p2.id << " s:" << p2.sent << " r:" << p2.rec << std::endl;
 }
+void part2_sync(const Commands& cmds) {
+    using Regs = std::map<char, int64_t>;
+    using Vals = std::deque<int64_t>;
+    size_t idx_1 = 0;
+    Vals vals_1;
+    Regs registers_1{{'p', 0}};
+    bool waits_1 = false;
+    size_t sent_1 = 0;
+
+    size_t idx_2 = 0;
+    Vals vals_2;
+    Regs registers_2{{'p', 1}};
+    bool waits_2 = false;
+    size_t sent_2 = 0;
+
+    bool runs = true;
+    auto step = [&runs, &cmds](size_t& i, Regs& registers, Vals& vals, bool& waits, size_t& sent, bool other_waits, Vals& other_vals) {
+        auto get_val = [&registers] (const std::string& arg) {
+            if(std::isalpha(arg[0])) return registers[arg[0]];
+            else return static_cast<int64_t>(std::stoll(arg));
+        };
+        const auto& p = cmds[i];
+        auto type = p.first;
+        const auto& args = p.second;
+        switch(type) {
+            case CommandType::Sound: {
+                other_vals.push_back(get_val(args[0]));
+                sent++;
+            } break;
+            case CommandType::Set: {
+                char reg = args[0][0];
+                registers[reg] = get_val(args[1]);
+            } break;
+            case CommandType::Add: {
+               char reg = args[0][0];
+               registers[reg] += get_val(args[1]);
+            } break;
+            case CommandType::Mul: {
+               char reg = args[0][0];
+               registers[reg] *= get_val(args[1]);
+            } break;
+            case CommandType::Mod: {
+               char reg = args[0][0];
+               registers[reg] %= get_val(args[1]);
+            } break;
+            case CommandType::Recover: {
+               if(vals.empty()) {
+                   waits = true;
+                   if(other_waits)  {
+                       runs = false;
+                   }
+               } else {
+                   waits = false;
+                   auto reg = args[0][0];
+                   auto val = vals.front();
+                   vals.pop_front();
+                   registers[reg] = val;
+               }
+            } break;
+            case CommandType::JumpGZ: {
+              auto arg1 = get_val(args[0]);
+              auto arg2 = get_val(args[1]);
+              if(arg1 > 0) {
+                  i += arg2;
+                  i -= 1;
+              }
+            } break;
+        }
+    };
+    for(;runs;) {
+        (void) runs;
+        step(idx_1, registers_1, vals_1, waits_1, sent_1, waits_2, vals_2);
+        if(!waits_1)
+            idx_1++;
+        step(idx_2, registers_2, vals_2, waits_2, sent_2, waits_1, vals_1);
+        if(!waits_2)
+            idx_2++;
+    }
+    std::cout << sent_2 << std::endl;
+}
 
 int main(int, char**) {
     bool part_1 = false;
@@ -243,8 +304,10 @@ int main(int, char**) {
     }
     if(part_1)
         part1(cmds);
-    else 
+    else { 
         part2(cmds);
+        part2_sync(cmds);
+    }
     //1187
     //5969
 }
