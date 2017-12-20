@@ -23,6 +23,9 @@ struct Vec3 {
         *this = Vec3{x + other.x, y + other.y, z + other.z};
         return *this;
     }
+    bool operator==(const Vec3& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
 
     size_t len() const {
         return std::sqrt(x*x + y*y + z*z);
@@ -39,11 +42,13 @@ struct Particle {
           acc(acc)
     {}
 
-    void tick(int how_many = 1) {
-        while(how_many--) {
-            vel += acc;
-            pos += vel;
+    Particle pos_if(int ticks) {
+        Particle p(*this);
+        while(ticks--) {
+            p.vel += p.acc;
+            p.pos += p.vel;
         }
+        return p;
     }
 
     int64_t manhattan_dist() {
@@ -103,4 +108,25 @@ int main(int, char**) {
     });
     assert(it != particles.end());
     std::cout << std::distance(particles.begin(), it) << std::endl;
+    it = std::max_element(particles.begin(), particles.end(), [](const Particle& p1, const Particle& p2){
+            return p1.acc.len() < p2.acc.len();
+    });
+    assert(it != particles.end());
+    auto max = it->acc.len();
+    std::cout << max << std::endl;
+    std::vector<bool> destroyed(particles.size(), false);
+    for(size_t i = 0; i < particles.size(); i++ ){
+        if(destroyed[i]) continue;
+        for(size_t j = i + 1; j < particles.size(); j++){
+            if(destroyed[j]) continue;
+            for(size_t t = 0; t < max; t++) {
+                if(particles[i].pos_if(t).pos == particles[j].pos_if(t).pos) {
+                    destroyed[i] = true;
+                    destroyed[j] = true;
+                    break;
+                }
+            }
+        }
+    }
+    std::cout << particles.size() - std::count(destroyed.begin(), destroyed.end(), true) << std::endl;
 }
