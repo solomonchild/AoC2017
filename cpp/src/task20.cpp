@@ -104,17 +104,20 @@ int main(int, char**) {
         particles.emplace_back(pos, vel, acc);
     }
     auto it = std::min_element(particles.begin(), particles.end(), [](const Particle& p1, const Particle& p2){
-            return p1.acc.len() < p2.acc.len();
+            auto l1 = p1.acc.len();
+            auto l2 = p2.acc.len();
+            if(l1 == l2) 
+                return p1.pos.len() < p2.pos.len();
+            return l1 < l2;
     });
     assert(it != particles.end());
     std::cout << std::distance(particles.begin(), it) << std::endl;
+    //91
     it = std::max_element(particles.begin(), particles.end(), [](const Particle& p1, const Particle& p2){
             return p1.acc.len() < p2.acc.len();
     });
     assert(it != particles.end());
     auto max = it->acc.len();
-    std::cout << max << std::endl;
-    //91
     std::vector<bool> destroyed(particles.size(), false);
     for(size_t i = 0; i < particles.size(); i++ ){
         if(destroyed[i]) continue;
