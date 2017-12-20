@@ -114,6 +114,7 @@ int main(int, char**) {
     assert(it != particles.end());
     auto max = it->acc.len();
     std::cout << max << std::endl;
+    //91
     std::vector<bool> destroyed(particles.size(), false);
     for(size_t i = 0; i < particles.size(); i++ ){
         if(destroyed[i]) continue;
@@ -129,4 +130,5 @@ int main(int, char**) {
         }
     }
     std::cout << particles.size() - std::count(destroyed.begin(), destroyed.end(), true) << std::endl;
+    //567
 }
