@@ -20,6 +20,24 @@ struct Pattern {
     Pattern(const Grid& g) 
     : pattern(g) { }
 
+    void rotate(Grid& g, int level) {
+        if(level == 1)
+            return;
+        auto h = level;
+        while(h--) {
+            int y = g.size() - level;
+            int x = h;
+            std::swap(g[y][x], g[x][y]);
+        }
+        rotate(g, level-1);
+    } 
+
+    Pattern rotate() {
+        Grid copy = pattern;
+        rotate(copy, copy.size());
+        return Pattern(copy);
+    }
+
     Pattern flip() {
         Grid g(pattern.size());
         for(size_t i = 0; i < pattern.size(); i++) {
@@ -133,10 +151,10 @@ int main(int, char**) {
         assert(Pattern(pattern.str()) == pattern);
         assert(Pattern(pattern.str(true)) == pattern);
         assert(Pattern(pattern.str(false)) == Pattern(".#...####"));
-        std::cout <<  Pattern(pattern).flip() << std::endl;
-        std::cout <<  Pattern(pattern).flip().flip() << std::endl;
-        std::cout <<  Pattern(pattern).flip().flip().flip() << std::endl;
-        std::cout <<  Pattern(pattern).flip().flip().flip().flip() << std::endl;
+        std::cout <<  Pattern(pattern).rotate() << std::endl;
+        std::cout <<  Pattern(pattern).rotate().rotate() << std::endl;
+        std::cout <<  Pattern(pattern).rotate().rotate().rotate() << std::endl;
+        std::cout <<  Pattern(pattern).rotate().rotate().rotate().rotate() << std::endl;
     }();
 
     for(size_t i = 0; i < 5; i++) {
