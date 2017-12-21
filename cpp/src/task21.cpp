@@ -23,29 +23,35 @@ struct Pattern {
         return pattern == other.pattern;
     }
 
+    void init(const std::string& s) {
+        auto row_size = std::sqrt(s.size());
+        pattern.clear();
+        for(auto i = 0u; i < row_size; i++) {
+            pattern.push_back(s.substr(i * row_size, row_size));
+        }
+    }
+
     Pattern(const std::string& s) {
         if(s.find('/') == std::string::npos) {
-            auto row_size = std::sqrt(s.size());
-            pattern.clear();
-            for(auto i = 0u; i < row_size; i++) {
-                pattern.push_back(s.substr(i * row_size, row_size));
-            }
-        } else pattern = split(s, "/");
+            init(s);
+        } else {
+            pattern = split(s, "/");
+            init(str(false));
+        }
     }
 
     Grid get_square(size_t size, size_t which) {
         Grid ret;
-        which--;
         size_t how_many_in_row = pattern.size() / size;
         size_t row_s = which / how_many_in_row * size;
         size_t col_s = which % how_many_in_row * size;
-        std::cout << "for " << which << " " << row_s << ":" << col_s << std::endl;
         for(size_t row = 0; row < size; row++) {
             ret.push_back({pattern[row + row_s].begin() + col_s, pattern[row + row_s].begin() + col_s + size});
         }
         return ret;
 
     }
+    size_t size() const { return pattern.size(); }
 
     std::string str(bool slashes = true) const {
         std::ostringstream oss;
@@ -98,10 +104,23 @@ int main(int, char**) {
         assert(Pattern(pattern.str(true)) == pattern);
         assert(Pattern(pattern.str(false)) == Pattern(".#...####"));
     }();
-    Pattern n (get_rule(pattern));
-    std::cout << n << std::endl;
-    std::cout << n.get_square(2, 1) << std::endl;
-    std::cout << n.get_square(2, 2) << std::endl;
-    std::cout << n.get_square(2, 3) << std::endl;
-    std::cout << n.get_square(2, 4) << std::endl;
+
+    for(size_t i = 0; i < 3; i++) {
+        if(!(pattern.size() & 0x1)) {
+            auto how_many = pattern.size();
+            std::string acc;
+            for(size_t i = 0; i < how_many; i++) {
+                auto square = pattern.get_square(2, i);
+                acc += get_rule(Pattern(square));
+            }
+            pattern = acc;
+        } else {
+            Pattern new_pattern = get_rule(pattern);
+            std::cout << "[from]\n";
+            std::cout << pattern;
+            std::cout << "[to]\n";
+            std::cout << new_pattern;
+            pattern = new_pattern;
+        }
+    }
 }
