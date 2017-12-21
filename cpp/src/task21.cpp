@@ -5,6 +5,7 @@
 #include <sstream>
 #include <map>
 #include <algorithm>
+#include <numeric>
 #include <cmath>
 #include <cassert>
 
@@ -18,6 +19,34 @@ using Grid = std::vector<std::string>;
 struct Pattern {
     Pattern(const Grid& g) 
     : pattern(g) { }
+
+    Pattern flip() {
+        Grid g(pattern.size());
+        for(size_t i = 0; i < pattern.size(); i++) {
+            for(size_t j = 0; j < pattern.size(); j++) {
+                g[j] += pattern[i][j];
+            }
+        }
+        return Pattern(g);
+    }
+
+    Pattern(const std::vector<Grid>& grids) {
+        if(grids.empty())
+            return;
+        size_t side = std::sqrt(grids.size());
+        size_t height = grids[0].size();
+        std::string acc;
+        for(size_t i = 0; i < side*height; i++) {
+            auto f = (i / height) * side;
+            auto t = f+side;
+            auto from = std::next(grids.begin(), f);
+            auto to = std::next(grids.begin(), t);
+            acc += std::accumulate(from, to, std::string(), [i,height](const std::string& res, const Grid& g){
+                return res + g[i%height];
+            });
+        }
+        init(acc);
+    }
 
     bool operator==(const Pattern& other) const {
         return pattern == other.pattern;
@@ -40,7 +69,7 @@ struct Pattern {
         }
     }
 
-    Grid get_square(size_t size, size_t which) {
+    Pattern get_square(size_t size, size_t which) {
         Grid ret;
         size_t how_many_in_row = pattern.size() / size;
         size_t row_s = which / how_many_in_row * size;
@@ -48,17 +77,18 @@ struct Pattern {
         for(size_t row = 0; row < size; row++) {
             ret.push_back({pattern[row + row_s].begin() + col_s, pattern[row + row_s].begin() + col_s + size});
         }
-        return ret;
+        return Pattern(ret);
 
     }
     size_t size() const { return pattern.size(); }
+    Grid grid() const { return pattern; }
 
     std::string str(bool slashes = true) const {
         std::ostringstream oss;
         auto delim = (slashes ? "/" : "");
         std::copy(pattern.begin(), pattern.end(), std::ostream_iterator<std::string>(oss, delim));
         auto s = oss.str();
-        return (slashes ? s.erase(s.size() - 1) : s);
+        return (slashes && !s.empty()? s.erase(s.size() - 1) : s);
     }
 
     Grid pattern;
@@ -76,7 +106,7 @@ std::string find_rule(Pattern pattern, const Rules& rules) {
     auto cmpr = pattern.str(false);
 
     for(size_t i = 0; i < cmpr.size(); i++) {
-        std::rotate(cmpr.begin(), std::next(cmpr.begin(), i), cmpr.end());
+        std::rotate(cmpr.begin(), std::next(cmpr.begin(), 1), cmpr.end());
         pattern = cmpr;
         if(rules.find(pattern.str(true)) != rules.end()) 
             return rules.at(pattern.str(true));
@@ -103,24 +133,32 @@ int main(int, char**) {
         assert(Pattern(pattern.str()) == pattern);
         assert(Pattern(pattern.str(true)) == pattern);
         assert(Pattern(pattern.str(false)) == Pattern(".#...####"));
+        std::cout <<  Pattern(pattern).flip() << std::endl;
+        std::cout <<  Pattern(pattern).flip().flip() << std::endl;
+        std::cout <<  Pattern(pattern).flip().flip().flip() << std::endl;
+        std::cout <<  Pattern(pattern).flip().flip().flip().flip() << std::endl;
     }();
 
-    for(size_t i = 0; i < 3; i++) {
+    for(size_t i = 0; i < 5; i++) {
+        int sq = 3;
         if(!(pattern.size() & 0x1)) {
-            auto how_many = pattern.size();
-            std::string acc;
-            for(size_t i = 0; i < how_many; i++) {
-                auto square = pattern.get_square(2, i);
-                acc += get_rule(Pattern(square));
-            }
-            pattern = acc;
-        } else {
-            Pattern new_pattern = get_rule(pattern);
-            std::cout << "[from]\n";
-            std::cout << pattern;
-            std::cout << "[to]\n";
-            std::cout << new_pattern;
-            pattern = new_pattern;
+            sq = 2;
         }
+        auto how_many = pattern.size()*pattern.size()/(sq*sq);
+        std::string acc;
+        std::vector<Grid> grids;
+        for(size_t i = 0; i < how_many; i++) {
+            Pattern next = get_rule(pattern.get_square(sq, i));
+            grids.push_back(next.grid());
+        }
+        Pattern new_pattern = grids;
+        std::cout << "\n[from]\n";
+        std::cout << pattern;
+        std::cout << "[to]\n";
+        std::cout << new_pattern;
+        pattern = new_pattern;
     }
+    auto str = pattern.str();
+    auto no_of_1 = std::count(str.begin(), str.end(), '#');
+    std::cout << no_of_1 << std::endl;
 }
