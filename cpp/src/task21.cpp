@@ -14,27 +14,26 @@
 using Rules = std::map<std::string, std::string>;
 using Grid = std::vector<std::string>;
 
-
-
 struct Pattern {
     Pattern(const Grid& g) 
     : pattern(g) { }
 
-    void rotate(Grid& g, int level) {
-        if(level == 1)
-            return;
-        auto h = level;
-        while(h--) {
-            int y = g.size() - level;
-            int x = h;
-            std::swap(g[y][x], g[x][y]);
-        }
-        rotate(g, level-1);
-    } 
-
     Pattern rotate() {
         Grid copy = pattern;
-        rotate(copy, copy.size());
+        if(copy.size() <= 3) {
+            std::string l_col = std::accumulate(copy.begin(), copy.end(), std::string(), [copy](const std::string& res, const std::string& row){
+                    return res + row[0];
+            });
+            std::string r_col = std::accumulate(copy.begin(), copy.end(), std::string(), [copy](const std::string& res, const std::string& row){
+                    return res + row[row.size()-1];
+            });
+            std::string t_row = copy[0];
+            std::string b_row = copy[copy.size()-1];
+            std::for_each(t_row.rbegin(), t_row.rend(), [i=0,&copy](char chr)mutable{copy[i++][0]=chr;});
+            std::for_each(b_row.rbegin(), b_row.rend(), [i=0,&copy](char chr)mutable{copy[i++][copy.size()-1]=chr;});
+            copy[0] = r_col;
+            copy[copy.size()-1] = l_col;
+        }
         return Pattern(copy);
     }
 
@@ -121,13 +120,14 @@ std::ostream& operator<< (std::ostream& oss, const Pattern& p) {
 }
 
 std::string find_rule(Pattern pattern, const Rules& rules) {
-    auto cmpr = pattern.str(false);
-
-    for(size_t i = 0; i < cmpr.size(); i++) {
-        std::rotate(cmpr.begin(), std::next(cmpr.begin(), 1), cmpr.end());
-        pattern = cmpr;
+    if(rules.find(pattern.str(true)) != rules.end()) 
+        return rules.at(pattern.str(true));
+    for(size_t i = 0; i < 4; i++) {
+        pattern = pattern.rotate();
         if(rules.find(pattern.str(true)) != rules.end()) 
             return rules.at(pattern.str(true));
+        if(rules.find(pattern.flip().str(true)) != rules.end()) 
+            return rules.at(pattern.flip().str(true));
     }
     return "";
 }
@@ -151,13 +151,13 @@ int main(int, char**) {
         assert(Pattern(pattern.str()) == pattern);
         assert(Pattern(pattern.str(true)) == pattern);
         assert(Pattern(pattern.str(false)) == Pattern(".#...####"));
-        std::cout <<  Pattern(pattern).rotate() << std::endl;
-        std::cout <<  Pattern(pattern).rotate().rotate() << std::endl;
-        std::cout <<  Pattern(pattern).rotate().rotate().rotate() << std::endl;
-        std::cout <<  Pattern(pattern).rotate().rotate().rotate().rotate() << std::endl;
+        assert(Pattern(pattern) == Pattern(pattern).rotate().rotate().rotate().rotate());
+        assert(Pattern("##..") == Pattern("##..").rotate().rotate().rotate().rotate());
     }();
 
-    for(size_t i = 0; i < 5; i++) {
+    bool part1 = true;
+
+    for(size_t i = 0; i < (part1 ? 5 : 18); i++) {
         int sq = 3;
         if(!(pattern.size() & 0x1)) {
             sq = 2;
@@ -170,13 +170,15 @@ int main(int, char**) {
             grids.push_back(next.grid());
         }
         Pattern new_pattern = grids;
-        std::cout << "\n[from]\n";
+        /*std::cout << "\n[from]\n";
         std::cout << pattern;
         std::cout << "[to]\n";
-        std::cout << new_pattern;
+        std::cout << new_pattern;*/
         pattern = new_pattern;
     }
     auto str = pattern.str();
     auto no_of_1 = std::count(str.begin(), str.end(), '#');
     std::cout << no_of_1 << std::endl;
+    //110 for part1
+    //1277716 for part2
 }

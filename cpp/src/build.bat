@@ -1,4 +1,5 @@
 @echo off
+cls
 
 set NUM=%1
 if exist task%NUM%.txt (
