@@ -49,22 +49,34 @@ struct Map {
 
     Rows rows;
     Carrier& carrier;
+    size_t size;
     Map(Rows&& rows, Carrier& carrier) 
         : rows(rows),
-          carrier(carrier) { }
+          carrier(carrier),
+          size(rows.size()) { }
 
     void expand(int how_many = 1) {
         while(how_many--) {
+            size+=2;
             for(auto& r : rows) {
                 r.insert(r.begin(), CLEAN);
-                r.insert(std::prev(r.end()), CLEAN);
+                r.insert(r.end(), CLEAN);
             }
-            rows.insert(rows.begin(), Row(rows.size(), CLEAN));
-            rows.insert(std::prev(rows.end()), Row(rows.size(), CLEAN));
-            carrier.pos.x += how_many;
-            carrier.pos.y += how_many;
+            rows.insert(rows.begin(), Row(size, CLEAN));
+            rows.insert(rows.end(), Row(size, CLEAN));
+            carrier.pos.x += 2*how_many;
+            carrier.pos.y += 2*how_many;
         }
     }
+
+    Tile get(size_t x, size_t y) {
+        if(x < rows.size() && y < rows.size()) {
+            return rows[y][x];
+        }
+        return 0;
+    }
+
+
     void print() {
         auto match_x = [this](size_t j) {return j == static_cast<size_t>(carrier.pos.x);};
         for(size_t i = 0; i < rows.size(); i++) {
@@ -72,13 +84,13 @@ struct Map {
                 for(size_t j = 0; j < rows[i].size(); j++) {
                     if(match_x(j)) {
                         std::cout << "[";
-                    } else if(!j && !match_x(j+1)) std::cout << " ";
+                    } else if(j && !match_x(j-1)) std::cout << " ";
 
                     std::cout << rows[i][j];
 
                     if(match_x(j)) {
                         std::cout << "]";
-                    } else if(!j && !match_x(j+1)) std::cout << " ";
+                    } 
                 }
                 std::cout << std::endl;
             } else {
@@ -97,6 +109,7 @@ int main(int, char**) {
     }
     Carrier carrier({1,1});
     Map map(std::move(rows), carrier);
+    map.expand(2);
     map.print();
 
 }
