@@ -9,12 +9,22 @@ enum class Direction {
 
 const static char CLEAN = '.';
 const static char INFECTED = '#';
+const static char WEAKENED = 'W';
+const static char FLAGGED = 'F';
 struct Vec2 {
     int x;
     int y;
 
     Vec2(int x, int y) 
         :x(x), y(y) {}
+
+    bool operator<(const Vec2& other) const {
+        return x < other.x && y < other.y;
+    }
+
+    bool operator>(const Vec2& other) const {
+        return x > other.x && y > other.y;
+    }
 
     Vec2 operator+(const Vec2& other) const {
         return {x+other.x, y+other.y};
@@ -31,8 +41,28 @@ struct Carrier {
     Direction dir;
 
     Carrier(const Vec2& start)
-    : pos(start), dir(Direction::Up) { }
+        : pos(start), dir(Direction::Up) { }
 
+    void move_forward() {
+        switch(dir) {
+            case Direction::Up:
+                pos.y--; break;
+            case Direction::Down:
+                pos.y++; break;
+            case Direction::Left:
+                pos.x--; break;
+            case Direction::Right:
+                pos.x++; break;
+        }
+
+    }
+
+    void reverse() {
+        if(dir == Direction::Right) dir = Direction::Left;
+        else if(dir == Direction::Left) dir = Direction::Right;
+        else if(dir == Direction::Up) dir = Direction::Down;
+        else if(dir == Direction::Down) dir = Direction::Up;
+    }
     void turn(Direction new_dir) {
         int cur_dir = static_cast<int>(dir);
         if(new_dir == Direction::Right)
@@ -52,8 +82,15 @@ struct Map {
     size_t size;
     Map(Rows&& rows, Carrier& carrier) 
         : rows(rows),
-          carrier(carrier),
-          size(rows.size()) { }
+        carrier(carrier),
+        size(rows.size()) { }
+
+    bool expand_needed() const {
+        size_t sx = static_cast<size_t>(carrier.pos.x);
+        size_t sy = static_cast<size_t>(carrier.pos.y);
+        return  sx == size - 1 || sx == 0
+            || sy == size - 1 || sy == 0;
+    }
 
     void expand(int how_many = 1) {
         carrier.pos.x += how_many;
@@ -69,15 +106,36 @@ struct Map {
         }
     }
 
-    Tile get(size_t x, size_t y) {
-        if(x < rows.size() && y < rows.size()) {
-            return rows[y][x];
+    Tile get_tile(const Vec2& pos) const {
+        if(pos < Vec2(size, size)) {
+            return rows[pos.y][pos.x];
         }
-        return 0;
+        return false;
+    }
+
+    void weaken(const Vec2& pos) {
+        if(pos < Vec2(size, size)) {
+            rows[pos.y][pos.x] = WEAKENED;
+        }
+    }
+    void infect(const Vec2& pos) {
+        if(pos < Vec2(size, size)) {
+            rows[pos.y][pos.x] = INFECTED;
+        }
+    }
+    void flag(const Vec2& pos) {
+        if(pos < Vec2(size, size)) {
+            rows[pos.y][pos.x] = FLAGGED;
+        }
+    }
+    void clean(const Vec2& pos) {
+        if(pos < Vec2(size, size)) {
+            rows[pos.y][pos.x] = CLEAN;
+        }
     }
 
 
-    void print() {
+    void print() const {
         auto match_x = [this](size_t j) {return j == static_cast<size_t>(carrier.pos.x);};
         for(size_t i = 0; i < rows.size(); i++) {
             if(i == static_cast<size_t>(carrier.pos.y)) {
@@ -107,15 +165,48 @@ int main(int, char**) {
     for(std::string line; std::getline(std::cin, line); ) {
         rows.push_back(line);
     }
-    Carrier carrier({1,1});
+    auto c = rows.size()/2;
+    Carrier carrier(Vec2(c,c));
     Map map(std::move(rows), carrier);
     map.expand(3);
 
     map.print();
-    size_t iter = 1;
+    std::cout << std::endl;
+    bool part1 = true;
+    size_t iter = part1 ? 10000 : 10000000;
+    size_t bursts = 0;
     while(iter--) {
-
-
+        if(part1) {
+            if(map.get_tile(carrier.pos) != CLEAN) {
+                carrier.turn(Direction::Right);
+                map.clean(carrier.pos);
+            } else {  
+                carrier.turn(Direction::Left);
+                map.infect(carrier.pos);
+                bursts++;
+            }
+        } else {
+            auto tile = map.get_tile(carrier.pos);
+            if(tile == CLEAN) {
+                carrier.turn(Direction::Left);
+                map.weaken(carrier.pos);
+            } else if(tile == WEAKENED) {
+                map.infect(carrier.pos);
+                bursts++;
+            } else if(tile == INFECTED) {
+                carrier.turn(Direction::Right);
+                map.flag(carrier.pos);
+            } else if(tile == FLAGGED) {
+                carrier.reverse();
+                map.clean(carrier.pos);
+            }
+        }
+        carrier.move_forward();
+        if(map.expand_needed()) {
+            map.expand(1);
+        }
     }
-
+    map.print();
+    std::cout << bursts;
+    //5450 and 2511957
 }
