@@ -31,7 +31,7 @@ struct Carrier {
     Direction dir;
 
     Carrier(const Vec2& start)
-    : pos(start) { }
+    : pos(start), dir(Direction::Up) { }
 
     void turn(Direction new_dir) {
         int cur_dir = static_cast<int>(dir);
@@ -56,6 +56,8 @@ struct Map {
           size(rows.size()) { }
 
     void expand(int how_many = 1) {
+        carrier.pos.x += how_many;
+        carrier.pos.y += how_many;
         while(how_many--) {
             size+=2;
             for(auto& r : rows) {
@@ -64,8 +66,6 @@ struct Map {
             }
             rows.insert(rows.begin(), Row(size, CLEAN));
             rows.insert(rows.end(), Row(size, CLEAN));
-            carrier.pos.x += 2*how_many;
-            carrier.pos.y += 2*how_many;
         }
     }
 
@@ -109,7 +109,13 @@ int main(int, char**) {
     }
     Carrier carrier({1,1});
     Map map(std::move(rows), carrier);
-    map.expand(2);
+    map.expand(3);
+
     map.print();
+    size_t iter = 1;
+    while(iter--) {
+
+
+    }
 
 }
