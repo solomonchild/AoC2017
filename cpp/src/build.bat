@@ -5,7 +5,7 @@ set NUM=%1
 set COMP=%2
 IF "%COMP%"=="mingw" (
 set CC=g++
-set FLAGS=
+set FLAGS=-O3
 ) ELSE (
 set CC=clang++
 set FLAGS=-Xclang -flto-visibility-public-std

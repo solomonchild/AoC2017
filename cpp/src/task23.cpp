@@ -92,22 +92,25 @@ void part1(const Commands& cmds) {
         }
     std::cout << mul_c;
 }
-void part2(const Commands& cmds) {
-    Registers registers {{'a', 1}};
 
-    bool runs = true;
-    for(size_t i = 0; i < cmds.size() && runs; i++) {
-          p(registers);
-            const auto& p = cmds[i];
-            auto type = p.first;
-            const auto& args = p.second;
-            i += handle_basic_cmd(type, args, registers);
+//handmade disasembly
+void part2() {
+    int64_t b = 109300;
+    const int64_t c = 126300;
+    int64_t h = 0;
+    for(; b <= c; b += 17) {
+        for(int64_t i = 2; i < b; i++) {
+            if(b % i == 0) {
+                h++;
+                break;
+            }
         }
-    std::cout << registers['h'];
+    }
+    std::cout << h << std::endl;
 }
 
 int main(int, char**) {
-    bool part_1 = false;
+    bool part_1 = true;
     Commands cmds;
     for(std::string line; std::getline(std::cin, line);) {
         if(line[0] == '#')
@@ -119,6 +122,8 @@ int main(int, char**) {
 
     if(part_1)
         part1(cmds); 
+        //8281
     else
-        part2(cmds); 
+        part2(); 
+        //911, see disas 23.cpp
 }

@@ -29,9 +29,20 @@ void unused() {
 }
 
 void part1() {
+    int64_t b = 109300;
+    const int64_t c = 126300;
+    int64_t h = 0;
+    for(; b <= c; b += 17) {
+        for(int64_t i = 2; i < b; i++) {
+            if(b % i == 0) {
+                h++;
+                break;
+            }
+        }
+    }
+    std::cout << h;
 
 }
 int main() {
     part1();
-
 }
