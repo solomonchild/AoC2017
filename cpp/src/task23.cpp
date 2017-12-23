@@ -13,6 +13,7 @@ enum class CommandType {
     Add,
     Sub,
     Mul,
+    Nop,
     JumpNZ,
 };
 using Command = std::pair<CommandType, std::vector<std::string>>; 
@@ -23,6 +24,7 @@ CommandType string_to_cmd_type(const std::string& str) {
     if(str == "set") return CommandType::Set;
     if(str == "add") return CommandType::Add;
     if(str == "mul") return CommandType::Mul;
+    if(str == "nop") return CommandType::Nop;
     if(str == "sub") return CommandType::Sub;
     else return CommandType::JumpNZ;
 }
@@ -33,6 +35,12 @@ auto get_val (const std::string& arg, Registers& registers) {
     } else return static_cast<int64_t>(std::stoll(arg));
 }
 
+void p(Registers& reg) {
+    for(const auto& p : reg) {
+        std::cout << "[" << p.first << "]: " << p.second << ", ";
+    }
+    std::cout << std::endl;
+}
 using Handler = std::function<void(const std::string&, Registers&)>;
 int handle_basic_cmd(CommandType type, const std::vector<std::string>& args, Registers& registers, Handler mul_hook = [](const std::string& , Registers&){}) {
         int off = 0;
@@ -48,6 +56,8 @@ int handle_basic_cmd(CommandType type, const std::vector<std::string>& args, Reg
             case CommandType::Sub: {
                char reg = args[0][0];
                registers[reg] -= get_val(args[1], registers);
+            } break;
+            case CommandType::Nop: {
             } break;
             case CommandType::Mul: {
                char reg = args[0][0];
@@ -87,6 +97,7 @@ void part2(const Commands& cmds) {
 
     bool runs = true;
     for(size_t i = 0; i < cmds.size() && runs; i++) {
+          p(registers);
             const auto& p = cmds[i];
             auto type = p.first;
             const auto& args = p.second;
@@ -99,6 +110,8 @@ int main(int, char**) {
     bool part_1 = false;
     Commands cmds;
     for(std::string line; std::getline(std::cin, line);) {
+        if(line[0] == '#')
+            continue;
         auto vec = split(line);
         auto cmd = string_to_cmd_type(vec[0]);
         cmds.push_back(std::make_pair(cmd, std::vector<std::string>{vec.begin() + 1, vec.end()}));
